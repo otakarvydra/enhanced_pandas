@@ -1,13 +1,13 @@
 #This script includes the definition of enhanced Pandas DataFrame
 
 #Imports
-
 from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 
 class EnhancedPandas():
 
+#viewna_all views the sum of missing values as well as the percentage of the whole column for each column of df
     def viewna_all(df):
         frame_missing = df.isna().sum().reset_index()
         frame_missing = frame_missing.rename(columns = {'index': 'column', 0 : 'missing count'})
@@ -15,6 +15,7 @@ class EnhancedPandas():
 
         return frame_missing
 
+#viewna_column groups the sum of missing values in column by values of column_2. Is useful for determining what is the cause of the missing data
     def viewna_column(df, column, column_2):
         grouped_frame = df.groupby(column_2)[column].apply(lambda x: x.isnull().sum()).reset_index()
         grouped_renamed_frame = grouped_frame.rename(columns = {str(column) : str(column) + ' missing values'})
@@ -28,6 +29,7 @@ class EnhancedPandas():
 
         return grouped_renamed_frame, plt          
 
+#check_missing_time_records loops through column that includes timestamps of given format and checks if there are any missing records   
     def check_missing_time_records(df, column, format):
         record_list = df[column].to_list()
         delta = datetime.strptime(str(record_list[1]), format) - datetime.strptime(str(record_list[0]), format)
@@ -46,6 +48,7 @@ class EnhancedPandas():
 
         return missing_values
 
+#normalize takes p_key *args and creates a normalized table with p_key as the primary key and values in *args as the table columns 
     def normalize(df, p_key, keep_orig, *args):
         new_frame = pd.DataFrame()
         new_frame[p_key] = df[p_key]
@@ -61,7 +64,8 @@ class EnhancedPandas():
                 df = df.drop(arg, axis = 1)
         
         return df, new_frame
-        
+
+ #check_bool checks if there is a boolean value in column      
     def check_bool(df, column):
         bool_list = []
         lst = df[column].to_list()
@@ -70,7 +74,8 @@ class EnhancedPandas():
                 bool_list.append(element)
         
         return bool_list
-    
+
+  #ckeck_numeric checks if there is a numeric value in column  
     def check_numeric(df, column):
         numeric_list = []
         lst = df[column].to_list()
@@ -83,6 +88,7 @@ class EnhancedPandas():
         
         return numeric_list
 
+#check_empty_values checks if there are strings in column that are commonly used to denote an empty element. ('unknown', 'none', 'empty')
     def check_empty_values(df, column):
         frame_unique = df.drop_duplicates(subset=column).reset_index()
         frame_unique[column] = frame_unique[column].str.lower()
@@ -97,6 +103,7 @@ class EnhancedPandas():
         if strings_present == []:
             print('No empty strings present in the column')
 
+#sort_check sorts column and provides n first and n last values. Any weird elements will either float to the top or bottom
     def sort_check(df, column, n):
         df = df[column]
         frame_unique = df.drop_duplicates()
@@ -105,7 +112,8 @@ class EnhancedPandas():
         print(frame_sorted.head(n))
         print('Tail:')
         print(frame_sorted.tail(n))
-    
+
+#check_headers checks if there are headers in any of the columns of a given df
     def check_headers(df):
         column_names = df.columns
         columns_with_header = []
