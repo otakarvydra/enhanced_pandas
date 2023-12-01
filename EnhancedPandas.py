@@ -4,6 +4,7 @@
 from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 class EnhancedPandas():
 
@@ -17,17 +18,24 @@ class EnhancedPandas():
 
 #viewna_column groups the sum of missing values in column by values of column_2. Is useful for determining what is the cause of the missing data
     def viewna_column(df, column, column_2):
-        grouped_frame = df.groupby(column_2)[column].apply(lambda x: x.isnull().sum()).reset_index()
-        grouped_renamed_frame = grouped_frame.rename(columns = {str(column) : str(column) + ' missing values'})
+        grouped_frame_missing = df.groupby(column_2)[column].apply(lambda x: x.isnull().sum()).reset_index()
+        grouped_frame_filled = df.groupby(column_2)[column].count().reset_index()
+        
+        #Renaming columns
+        grouped_frame_missing = grouped_frame_missing.rename(columns = {str(column) : str(column) + ' missing values'})
+        grouped_frame_filled = grouped_frame_filled.rename(columns = {str(column) : str(column) + ' filled in values'})
+        
+        #Merging the two dataframes
+        grouped_frame = pd.merge(grouped_frame_filled, grouped_frame_missing)
 
-        #Plotting
-        plt.bar(grouped_renamed_frame[str(column_2)], grouped_renamed_frame[str(column) + ' missing values'])
-        plt.xlabel('column values')
-        plt.ylabel('missing values count')
-        plt.title('missing values correlation investigation')
-        plt.legend()
+        #Adjustment and calculation of the percentage missing
+        grouped_frame[str(column) + ' number of records'] = grouped_frame[str(column) + ' filled in values'] + grouped_frame[str(column) + ' missing values']
+        grouped_frame = grouped_frame.drop(str(column) + ' filled in values', axis=1).reset_index()
+        grouped_frame = grouped_frame.drop('index', axis=1).reset_index()
+        grouped_frame['Percentage Missing'] = grouped_frame[str(column) + ' missing values'] / grouped_frame[str(column) + ' number of records'] * 100
+        grouped_frame = grouped_frame[['User Type', str(column) + ' number of records', str(column) + ' missing values', 'Percentage Missing']]
 
-        return grouped_renamed_frame, plt          
+        return grouped_frame        
 
 #check_missing_time_records loops through column that includes timestamps of given format and checks if there are any missing records   
     def check_missing_time_records(df, column, format):
